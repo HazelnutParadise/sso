@@ -15,5 +15,6 @@ func GetUserByID(userID uint) (*models.User, error) {
 }
 
 func SuspendUser(userID uint) error {
+	// todo: 紀錄停權原因(開一個新的表)
 	return db.Model(&models.User{}).Where("id = ?", userID).Update("is_active", false).Error
 }
