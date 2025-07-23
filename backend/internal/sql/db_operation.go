@@ -36,6 +36,9 @@ func UpdateUser(user *models.User) error {
 	if len(toUpdateFields) == 0 {
 		return nil // Nothing to update
 	}
+
+	toUpdateFields = append(toUpdateFields, "updated_at") // Always update updated_at
+	user.UpdatedAt = time.Now()                           // 確保 updated_at 是最新時間
 	// 使用 Select 方法指定要更新的欄位
 	return db.Model(&models.User{}).Where("id = ?", user.ID).Select(toUpdateFields).Updates(user).Error
 }
