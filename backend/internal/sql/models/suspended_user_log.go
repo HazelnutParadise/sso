@@ -12,7 +12,7 @@ import (
 // SuspendedBy: 操作者ID（可選）
 type SuspendedUserLog struct {
 	ID          uint      `gorm:"primaryKey"`
-	UserID      uint      `gorm:"index;not null"`
+	UserID      uint      `gorm:"index;not null;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID"`
 	Reason      string    `gorm:"size:255;not null"`
 	SuspendedAt time.Time `gorm:"not null;autoCreateTime"`
 	SuspendedBy *uint     `gorm:"index"`

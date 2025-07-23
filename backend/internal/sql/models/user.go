@@ -17,7 +17,8 @@ type User struct {
 	IsActive     bool `gorm:"default:true"`
 
 	// 關聯
-	UserProviders []UserProvider `gorm:"foreignKey:UserID"`
-	LoginLogs     []LoginLog     `gorm:"foreignKey:UserID"`
-	OAuthTokens   []OAuthToken   `gorm:"foreignKey:UserID"`
+	UserProviders     []UserProvider     `gorm:"foreignKey:UserID"`
+	LoginLogs         []LoginLog         `gorm:"foreignKey:UserID"`
+	OAuthTokens       []OAuthToken       `gorm:"foreignKey:UserID"`
+	SuspendedUserLogs []SuspendedUserLog `gorm:"foreignKey:UserID"`
 }
