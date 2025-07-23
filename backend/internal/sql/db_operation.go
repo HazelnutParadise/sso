@@ -19,6 +19,27 @@ func GetUserByID(userID uint) (*models.User, error) {
 	return &user, nil
 }
 
+func UpdateUser(user *models.User) error {
+	toUpdateFields := []string{}
+	if user.Name != nil && *user.Name != "" {
+		toUpdateFields = append(toUpdateFields, "name")
+	}
+	if user.AvatarURL != nil && *user.AvatarURL != "" {
+		toUpdateFields = append(toUpdateFields, "avatar_url")
+	}
+	if user.Email != "" {
+		toUpdateFields = append(toUpdateFields, "email")
+	}
+	if user.PasswordHash != nil && *user.PasswordHash != "" {
+		toUpdateFields = append(toUpdateFields, "password_hash")
+	}
+	if len(toUpdateFields) == 0 {
+		return nil // Nothing to update
+	}
+	// 使用 Select 方法指定要更新的欄位
+	return db.Model(&models.User{}).Where("id = ?", user.ID).Select(toUpdateFields).Updates(user).Error
+}
+
 // SuspendUser 停權使用者並記錄原因
 func SuspendUser(userID uint, reason string, suspendedBy *uint) error {
 	return db.Transaction(func(tx *gorm.DB) error {
