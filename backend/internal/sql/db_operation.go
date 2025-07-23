@@ -39,3 +39,24 @@ func SuspendUser(userID uint, reason string, suspendedBy *uint) error {
 		return nil
 	})
 }
+
+// Set limit to -1 to get all logs
+func GetSuspendedUserLogs(userID uint, limit int) ([]models.SuspendedUserLog, error) {
+	if limit < -1 || limit == 0 {
+		return nil, gorm.ErrInvalidValue
+	}
+
+	var logs []models.SuspendedUserLog
+	if err := db.Where("user_id = ?", userID).Order("suspended_at desc").Limit(limit).Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
+}
+
+func GetLatestSuspendedUserLog(userID uint) (*models.SuspendedUserLog, error) {
+	var log models.SuspendedUserLog
+	if err := db.Where("user_id = ?", userID).Order("suspended_at desc").First(&log).Error; err != nil {
+		return nil, err
+	}
+	return &log, nil
+}
