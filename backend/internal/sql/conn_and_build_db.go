@@ -24,5 +24,6 @@ func ConnectAndBuildDB() {
 		&models.OAuthClient{},
 		&models.OAuthToken{},
 		&models.LoginLog{},
+		&models.SuspendedUserLog{},
 	)
 }
