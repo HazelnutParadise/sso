@@ -20,27 +20,82 @@ func GetUserByID(userID uint) (*models.User, error) {
 }
 
 func UpdateUser(user *models.User) error {
+	// 先查詢原始資料
+	var oldUser models.User
+	if err := db.First(&oldUser, user.ID).Error; err != nil {
+		return err
+	}
+
 	toUpdateFields := []string{}
-	if user.Name != nil && *user.Name != "" {
+	updateLogs := []models.UserUpdateLog{}
+	now := time.Now()
+
+	if user.Name != nil && *user.Name != "" && (oldUser.Name == nil || *oldUser.Name != *user.Name) {
 		toUpdateFields = append(toUpdateFields, "name")
+		updateLogs = append(updateLogs, models.UserUpdateLog{
+			UserID:    user.ID,
+			Field:     "name",
+			OldValue:  getStringPointerValue(oldUser.Name),
+			NewValue:  *user.Name,
+			UpdatedAt: now,
+		})
 	}
-	if user.AvatarURL != nil && *user.AvatarURL != "" {
+	if user.AvatarURL != nil && *user.AvatarURL != "" && (oldUser.AvatarURL == nil || *oldUser.AvatarURL != *user.AvatarURL) {
 		toUpdateFields = append(toUpdateFields, "avatar_url")
+		updateLogs = append(updateLogs, models.UserUpdateLog{
+			UserID:    user.ID,
+			Field:     "avatar_url",
+			OldValue:  getStringPointerValue(oldUser.AvatarURL),
+			NewValue:  *user.AvatarURL,
+			UpdatedAt: now,
+		})
 	}
-	if user.Email != "" {
+	if user.Email != "" && oldUser.Email != user.Email {
 		toUpdateFields = append(toUpdateFields, "email")
+		updateLogs = append(updateLogs, models.UserUpdateLog{
+			UserID:    user.ID,
+			Field:     "email",
+			OldValue:  oldUser.Email,
+			NewValue:  user.Email,
+			UpdatedAt: now,
+		})
 	}
-	if user.PasswordHash != nil && *user.PasswordHash != "" {
+	if user.PasswordHash != nil && *user.PasswordHash != "" && (oldUser.PasswordHash == nil || *oldUser.PasswordHash != *user.PasswordHash) {
 		toUpdateFields = append(toUpdateFields, "password_hash")
+		updateLogs = append(updateLogs, models.UserUpdateLog{
+			UserID:    user.ID,
+			Field:     "password_hash",
+			OldValue:  getStringPointerValue(oldUser.PasswordHash),
+			NewValue:  *user.PasswordHash,
+			UpdatedAt: now,
+		})
 	}
 	if len(toUpdateFields) == 0 {
 		return nil // Nothing to update
 	}
 
 	toUpdateFields = append(toUpdateFields, "updated_at") // Always update updated_at
-	user.UpdatedAt = time.Now()                           // 確保 updated_at 是最新時間
-	// 使用 Select 方法指定要更新的欄位
-	return db.Model(&models.User{}).Where("id = ?", user.ID).Select(toUpdateFields).Updates(user).Error
+	user.UpdatedAt = now
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&models.User{}).Where("id = ?", user.ID).Select(toUpdateFields).Updates(user).Error; err != nil {
+			return err
+		}
+		for _, log := range updateLogs {
+			if err := tx.Create(&log).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// 取得 string pointer 的值，若為 nil 則回傳空字串
+func getStringPointerValue(ptr *string) string {
+	if ptr == nil {
+		return ""
+	}
+	return *ptr
 }
 
 // SuspendUser 停權使用者並記錄原因

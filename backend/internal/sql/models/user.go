@@ -21,4 +21,5 @@ type User struct {
 	LoginLogs         []LoginLog         `gorm:"foreignKey:UserID"`
 	OAuthTokens       []OAuthToken       `gorm:"foreignKey:UserID"`
 	SuspendedUserLogs []SuspendedUserLog `gorm:"foreignKey:UserID"`
+	UserUpdateLogs    []UserUpdateLog    `gorm:"foreignKey:UserID"` // 使用者資訊更改紀錄
 }
