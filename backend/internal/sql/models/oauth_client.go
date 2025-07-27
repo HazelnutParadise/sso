@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 // 🔹 OAuth Client 表（提供 OAuth 給別人）
 type OAuthClient struct {
@@ -12,6 +16,7 @@ type OAuthClient struct {
 	Scopes       string `gorm:"size:500"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+	DeletedAt    gorm.DeletedAt `gorm:"index"` // 軟刪除欄位
 
 	// 關聯
 	OAuthTokens []OAuthToken `gorm:"foreignKey:ClientID"`

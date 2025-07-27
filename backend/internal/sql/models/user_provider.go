@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 // 🔹 社群綁定表
@@ -15,6 +16,7 @@ type UserProvider struct {
 	ProviderEmail   *string        `gorm:"size:255"`
 	ProviderRawJSON datatypes.JSON `gorm:"type:jsonb"`
 	LinkedAt        time.Time      `gorm:"autoCreateTime"`
+	DeletedAt       gorm.DeletedAt `gorm:"index"` // 用於軟刪除
 
 	// 外鍵
 	User User `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

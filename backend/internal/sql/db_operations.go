@@ -19,6 +19,43 @@ func GetUserByID(userID uint) (*models.User, error) {
 	return &user, nil
 }
 
+func GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
+	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func AddUserProvider(provider *models.UserProvider) error {
+	return db.Create(provider).Error
+}
+
+func GetUserProviders(userID uint) ([]models.UserProvider, error) {
+	var providers []models.UserProvider
+	if err := db.Where("user_id = ?", userID).Find(&providers).Error; err != nil {
+		return nil, err
+	}
+	return providers, nil
+}
+
+func DeleteUserProvider(userID uint, providerName string) error {
+	return db.Where("user_id = ? AND provider_name = ?", userID, providerName).Delete(&models.UserProvider{}).Error
+}
+
+func GetUserByProviderUserID(providerName, providerUserID string) (*models.User, error) {
+	var provider models.UserProvider
+	if err := db.Where("provider_name = ? AND provider_user_id = ?", providerName, providerUserID).First(&provider).Error; err != nil {
+		return nil, err
+	}
+
+	var user models.User
+	if err := db.First(&user, provider.UserID).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func UpdateUser(user *models.User) error {
 	// 先查詢原始資料
 	var oldUser models.User
@@ -150,6 +187,39 @@ func GetSuspendedUserLogs(userID uint, limit int) ([]models.SuspendedUserLog, er
 		return nil, err
 	}
 	return logs, nil
+}
+
+func DeleteUser(userID uint) error {
+	return db.Delete(&models.User{}, userID).Error
+}
+
+func AddOauthClient(client *models.OAuthClient) error {
+	return db.Create(client).Error
+}
+
+func GetOauthClientByID(clientID uint) (*models.OAuthClient, error) {
+	var client models.OAuthClient
+	if err := db.First(&client, clientID).Error; err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func GetOauthClientByClientID(clientID string) (*models.OAuthClient, error) {
+	var client models.OAuthClient
+	if err := db.Where("client_id = ?", clientID).First(&client).Error; err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func UpdateOauthClient(client *models.OAuthClient) error {
+	// 先查詢原始資料
+	var oldClient models.OAuthClient
+	if err := db.First(&oldClient, client.ID).Error; err != nil {
+		return err
+	}
+	return db.Save(client).Error
 }
 
 // 取得 string pointer 的值，若為 nil 則回傳空字串

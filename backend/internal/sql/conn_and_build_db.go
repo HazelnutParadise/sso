@@ -12,7 +12,7 @@ import (
 var db *gorm.DB
 
 // 使用 GORM 連接資料庫並初始化
-func ConnectAndBuildDB() {
+func ConnectAndInitDB() {
 	dsn := "host=localhost port=5432 user=你的帳號 password=你的密碼 dbname=你的資料庫 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

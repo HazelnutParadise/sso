@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // 🔹 使用者主表
@@ -14,7 +16,8 @@ type User struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	LastLoginAt  *time.Time
-	IsActive     bool `gorm:"default:true"`
+	IsActive     bool           `gorm:"default:true"`
+	DeletedAt    gorm.DeletedAt `gorm:"index"` // 軟刪除欄位
 
 	// 關聯
 	UserProviders     []UserProvider     `gorm:"foreignKey:UserID"`
