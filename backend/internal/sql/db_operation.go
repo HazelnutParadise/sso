@@ -90,12 +90,32 @@ func UpdateUser(user *models.User) error {
 	})
 }
 
-// 取得 string pointer 的值，若為 nil 則回傳空字串
-func getStringPointerValue(ptr *string) string {
-	if ptr == nil {
-		return ""
+func GetUserUpdateLogs(userID uint, limit int) ([]models.UserUpdateLog, error) {
+	// 如果 limit 為 -1，則表示不限制數量
+	if limit < -1 || limit == 0 {
+		return nil, gorm.ErrInvalidValue
 	}
-	return *ptr
+
+	var logs []models.UserUpdateLog
+	query := db.Where("user_id = ?", userID).Order("updated_at desc").Limit(limit)
+	if err := query.Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
+}
+
+func GetUserPasswordUpdateLogs(userID uint, limit int) ([]models.UserUpdateLog, error) {
+	// 如果 limit 為 -1，則表示不限制數量
+	if limit < -1 || limit == 0 {
+		return nil, gorm.ErrInvalidValue
+	}
+
+	var logs []models.UserUpdateLog
+	query := db.Where("user_id = ? AND field = ?", userID, "password_hash").Order("updated_at desc").Limit(limit)
+	if err := query.Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
 }
 
 // SuspendUser 停權使用者並記錄原因
@@ -132,10 +152,10 @@ func GetSuspendedUserLogs(userID uint, limit int) ([]models.SuspendedUserLog, er
 	return logs, nil
 }
 
-func GetLatestSuspendedUserLog(userID uint) (*models.SuspendedUserLog, error) {
-	var log models.SuspendedUserLog
-	if err := db.Where("user_id = ?", userID).Order("suspended_at desc").First(&log).Error; err != nil {
-		return nil, err
+// 取得 string pointer 的值，若為 nil 則回傳空字串
+func getStringPointerValue(ptr *string) string {
+	if ptr == nil {
+		return ""
 	}
-	return &log, nil
+	return *ptr
 }
