@@ -10,8 +10,10 @@ type OAuthToken struct {
 	AccessToken  string  `gorm:"size:500;not null"`
 	RefreshToken *string `gorm:"size:500"`
 	ExpiresAt    *time.Time
-	Scope        string    `gorm:"size:500"`
-	CreatedAt    time.Time `gorm:"autoCreateTime"`
+	Scope        string     `gorm:"size:500"`
+	CreatedAt    time.Time  `gorm:"autoCreateTime"`
+	UpdatedAt    time.Time  `gorm:"autoUpdateTime"`
+	DeletedAt    *time.Time `gorm:"index"` // 軟刪除欄位
 
 	// 外鍵
 	User        User        `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

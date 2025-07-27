@@ -197,9 +197,9 @@ func AddOauthClient(client *models.OAuthClient) error {
 	return db.Create(client).Error
 }
 
-func GetOauthClientByID(clientID uint) (*models.OAuthClient, error) {
+func GetOauthClientByID(ID uint) (*models.OAuthClient, error) {
 	var client models.OAuthClient
-	if err := db.First(&client, clientID).Error; err != nil {
+	if err := db.First(&client, ID).Error; err != nil {
 		return nil, err
 	}
 	return &client, nil
@@ -220,6 +220,51 @@ func UpdateOauthClient(client *models.OAuthClient) error {
 		return err
 	}
 	return db.Save(client).Error
+}
+
+func DeleteOauthClient(ID uint) error {
+	return db.Delete(&models.OAuthClient{}, ID).Error
+}
+
+func AddOauthToken(token *models.OAuthToken) error {
+	return db.Create(token).Error
+}
+
+func GetOauthTokenByID(ID uint) (*models.OAuthToken, error) {
+	var token models.OAuthToken
+	if err := db.First(&token, ID).Error; err != nil {
+		return nil, err
+	}
+	return &token, nil
+}
+
+func GetOauthTokensByUserID(userID uint) ([]models.OAuthToken, error) {
+	var tokens []models.OAuthToken
+	if err := db.Where("user_id = ?", userID).Find(&tokens).Error; err != nil {
+		return nil, err
+	}
+	return tokens, nil
+}
+
+func GetOauthTokensByClientID(clientID uint) ([]models.OAuthToken, error) {
+	var tokens []models.OAuthToken
+	if err := db.Where("client_id = ?", clientID).Find(&tokens).Error; err != nil {
+		return nil, err
+	}
+	return tokens, nil
+}
+
+func UpdateOauthToken(token *models.OAuthToken) error {
+	// 先查詢原始資料
+	var oldToken models.OAuthToken
+	if err := db.First(&oldToken, token.ID).Error; err != nil {
+		return err
+	}
+	return db.Save(token).Error
+}
+
+func DeleteOauthToken(ID uint) error {
+	return db.Delete(&models.OAuthToken{}, ID).Error
 }
 
 // 取得 string pointer 的值，若為 nil 則回傳空字串
