@@ -176,8 +176,21 @@ func SuspendUser(userID uint, reason string, suspendedBy *uint) error {
 	})
 }
 
+func GetSuspendedUsersLogs(limit int) ([]models.SuspendedUserLog, error) {
+	if limit < -1 || limit == 0 {
+		return nil, gorm.ErrInvalidValue
+	}
+
+	var logs []models.SuspendedUserLog
+	query := db.Order("suspended_at desc").Limit(limit)
+	if err := query.Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
+}
+
 // Set limit to -1 to get all logs
-func GetSuspendedUserLogs(userID uint, limit int) ([]models.SuspendedUserLog, error) {
+func GetSingleUserSuspendedLogs(userID uint, limit int) ([]models.SuspendedUserLog, error) {
 	if limit < -1 || limit == 0 {
 		return nil, gorm.ErrInvalidValue
 	}
@@ -191,6 +204,75 @@ func GetSuspendedUserLogs(userID uint, limit int) ([]models.SuspendedUserLog, er
 
 func DeleteUser(userID uint) error {
 	return db.Delete(&models.User{}, userID).Error
+}
+
+func AddLoginLog(log *models.LoginLog) error {
+	return db.Create(log).Error
+}
+
+func GetUserLoginLogs(userID uint, limit int) ([]models.LoginLog, error) {
+	if limit < -1 || limit == 0 {
+		return nil, gorm.ErrInvalidValue
+	}
+
+	var logs []models.LoginLog
+	query := db.Where("user_id = ?", userID).Order("login_at desc").Limit(limit)
+	if err := query.Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
+}
+
+func GetLoginLogsByIP(ipAddress string, limit int) ([]models.LoginLog, error) {
+	if limit < -1 || limit == 0 {
+		return nil, gorm.ErrInvalidValue
+	}
+
+	var logs []models.LoginLog
+	query := db.Where("ip_address = ?", ipAddress).Order("login_at desc").Limit(limit)
+	if err := query.Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
+}
+
+func GetUserLoginLogsByIP(userID uint, ipAddress string, limit int) ([]models.LoginLog, error) {
+	if limit < -1 || limit == 0 {
+		return nil, gorm.ErrInvalidValue
+	}
+
+	var logs []models.LoginLog
+	query := db.Where("user_id = ? AND ip_address = ?", userID, ipAddress).Order("login_at desc").Limit(limit)
+	if err := query.Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
+}
+
+func GetLoginLogsBetweenDates(start, end time.Time, limit int) ([]models.LoginLog, error) {
+	if limit < -1 || limit == 0 {
+		return nil, gorm.ErrInvalidValue
+	}
+
+	var logs []models.LoginLog
+	query := db.Where("login_at BETWEEN ? AND ?", start, end).Order("login_at desc").Limit(limit)
+	if err := query.Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
+}
+
+func GetUserLoginLogsBetweenDates(userID uint, start, end time.Time, limit int) ([]models.LoginLog, error) {
+	if limit < -1 || limit == 0 {
+		return nil, gorm.ErrInvalidValue
+	}
+
+	var logs []models.LoginLog
+	query := db.Where("user_id = ? AND (login_at BETWEEN ? AND ?)", userID, start, end).Order("login_at desc").Limit(limit)
+	if err := query.Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
 }
 
 func AddOauthClient(client *models.OAuthClient) error {
