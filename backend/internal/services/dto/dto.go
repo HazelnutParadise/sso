@@ -1,8 +1,5 @@
 package dto
 
-// UserDTO 定義
-// ...existing code...
-
 // 通用 Model -> DTO 轉換
 
 // 泛型包裝：統一呼叫方式

@@ -6,9 +6,9 @@ import (
 )
 
 // AuthorizationService 負責權限判斷
-type AuthorizationService struct{}
+type authorizationService struct{}
 
-func (s *AuthorizationService) Authorize(userID uint, resource string, action string) (bool, error) {
+func (s *authorizationService) Authorize(userID uint, resource string, action string) (bool, error) {
 	user, err := sql.GetUserByID(userID)
 	if err != nil {
 		return false, errors.New("找不到使用者")

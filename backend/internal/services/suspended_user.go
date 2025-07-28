@@ -6,13 +6,13 @@ import (
 )
 
 // SuspendedUserService 管理停權/解鎖帳號
-type SuspendedUserService struct{}
+type suspendedUserService struct{}
 
-func (s *SuspendedUserService) SuspendUser(userID uint, reason string, suspendedBy *uint) error {
+func (s *suspendedUserService) SuspendUser(userID uint, reason string, suspendedBy *uint) error {
 	return sql.SuspendUser(userID, reason, suspendedBy)
 }
 
-func (s *SuspendedUserService) UnsuspendUser(userID uint) error {
+func (s *suspendedUserService) UnsuspendUser(userID uint) error {
 	// 解鎖：將 is_active 改回 true
 	user, err := sql.GetUserByID(userID)
 	if err != nil {
@@ -22,7 +22,7 @@ func (s *SuspendedUserService) UnsuspendUser(userID uint) error {
 	return sql.UpdateUser(user)
 }
 
-func (s *SuspendedUserService) GetSuspendedLogs(userID uint, limit int) ([]models.SuspendedUserLog, error) {
+func (s *suspendedUserService) GetSuspendedLogs(userID uint, limit int) ([]models.SuspendedUserLog, error) {
 	logs, err := sql.GetSingleUserSuspendedLogs(userID, limit)
 	if err != nil {
 		return nil, err

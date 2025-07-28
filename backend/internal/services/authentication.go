@@ -7,9 +7,9 @@ import (
 )
 
 // AuthenticationService 驗證使用者身分
-type AuthenticationService struct{}
+type authenticationService struct{}
 
-func (s *AuthenticationService) Authenticate(email, password string) (bool, error) {
+func (s *authenticationService) Authenticate(email, password string) (bool, error) {
 	user, err := sql.GetUserByEmail(email)
 	if err != nil || user.PasswordHash == nil {
 		return false, err

@@ -8,10 +8,10 @@ import (
 )
 
 // TokenService 管理 access/refresh token
-type TokenService struct{}
+type tokenService struct{}
 
 // 產生 token
-func (s *TokenService) GenerateToken(userID, clientID uint, scope string, expiresIn time.Duration) (*models.OAuthToken, error) {
+func (s *tokenService) GenerateToken(userID, clientID uint, scope string, expiresIn time.Duration) (*models.OAuthToken, error) {
 	token := &models.OAuthToken{
 		UserID:      userID,
 		ClientID:    clientID,
@@ -28,7 +28,7 @@ func (s *TokenService) GenerateToken(userID, clientID uint, scope string, expire
 }
 
 // 驗證 token
-func (s *TokenService) ValidateToken(accessToken string) (*models.OAuthToken, error) {
+func (s *tokenService) ValidateToken(accessToken string) (*models.OAuthToken, error) {
 	token, err := sql.GetOauthTokenByAccessToken(accessToken)
 	if err != nil {
 		return nil, errors.New("token 無效")
@@ -40,7 +40,7 @@ func (s *TokenService) ValidateToken(accessToken string) (*models.OAuthToken, er
 }
 
 // 失效 token
-func (s *TokenService) RevokeToken(tokenID uint) error {
+func (s *tokenService) RevokeToken(tokenID uint) error {
 	return sql.DeleteOauthToken(tokenID)
 }
 

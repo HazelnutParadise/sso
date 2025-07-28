@@ -1,11 +1,11 @@
 package services
 
 var (
-	AuthService           = &AuthenticationService{}
-	AuthorizeService      = &AuthorizationService{}
-	TokenServiceInstance  = &TokenService{}
-	UserServiceInstance   = &UserService{}
-	OAuthClientServiceIns = &OAuthClientService{}
-	LogServiceInstance    = &LogService{}
-	SuspendedUserServiceI = &SuspendedUserService{}
+	AuthService          = &authenticationService{}
+	AuthorizeService     = &authorizationService{}
+	TokenService         = &tokenService{}
+	UserService          = &userService{}
+	OAuthClientService   = &oauthClientService{}
+	LogService           = &logService{}
+	SuspendedUserService = &suspendedUserService{}
 )

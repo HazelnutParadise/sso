@@ -7,9 +7,9 @@ import (
 )
 
 // LogService 負責記錄系統事件
-type LogService struct{}
+type logService struct{}
 
-func (s *LogService) WriteLoginLog(userID uint, method, ip, userAgent string) error {
+func (s *logService) WriteLoginLog(userID uint, method, ip, userAgent string) error {
 	log := &models.LoginLog{
 		UserID:      userID,
 		LoginMethod: method,
@@ -19,7 +19,7 @@ func (s *LogService) WriteLoginLog(userID uint, method, ip, userAgent string) er
 	return sql.AddLoginLog(log)
 }
 
-func (s *LogService) GetUserLoginLogs(userID uint, limit int) ([]models.LoginLog, error) {
+func (s *logService) GetUserLoginLogs(userID uint, limit int) ([]models.LoginLog, error) {
 	logs, err := sql.GetUserLoginLogs(userID, limit)
 	if err != nil {
 		return nil, err
