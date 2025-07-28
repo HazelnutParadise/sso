@@ -336,6 +336,16 @@ func GetOauthTokensByClientID(clientID uint) ([]models.OAuthToken, error) {
 	return tokens, nil
 }
 
+// 依 access_token 查詢 OAuthToken
+func GetOauthTokenByAccessToken(accessToken string) (*models.OAuthToken, error) {
+	var token models.OAuthToken
+	err := db.Where("access_token = ?", accessToken).First(&token).Error
+	if err != nil {
+		return nil, err
+	}
+	return &token, nil
+}
+
 func UpdateOauthToken(token *models.OAuthToken) error {
 	// 先查詢原始資料
 	var oldToken models.OAuthToken

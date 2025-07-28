@@ -1,14 +1,33 @@
 package services
 
+import (
+	"sso/internal/sql"
+	"sso/internal/sql/models"
+)
+
 // SuspendedUserService 管理停權/解鎖帳號
 type SuspendedUserService struct{}
 
-func (s *SuspendedUserService) SuspendUser(userID string) error {
-	// 停權邏輯
-	return nil
+func (s *SuspendedUserService) SuspendUser(userID uint, reason string, suspendedBy *uint) error {
+	return sql.SuspendUser(userID, reason, suspendedBy)
 }
 
-func (s *SuspendedUserService) UnsuspendUser(userID string) error {
-	// 解鎖邏輯
-	return nil
+func (s *SuspendedUserService) UnsuspendUser(userID uint) error {
+	// 解鎖：將 is_active 改回 true
+	user, err := sql.GetUserByID(userID)
+	if err != nil {
+		return err
+	}
+	user.IsActive = true
+	return sql.UpdateUser(user)
+}
+
+func (s *SuspendedUserService) GetSuspendedLogs(userID uint, limit int) ([]models.SuspendedUserLog, error) {
+	logs, err := sql.GetSingleUserSuspendedLogs(userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	// 假設有 dto.ToSuspendedUserLogDTO
+	// return dto.ModelToDTO(&logs[0], dto.ToSuspendedUserLogDTO), nil
+	return logs, nil // TODO: 實作 DTO 轉換
 }
