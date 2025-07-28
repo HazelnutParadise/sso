@@ -4,7 +4,6 @@ import (
 	"sso/internal/sql"
 	"sso/internal/sql/models"
 	"sso/internal/utils"
-	"time"
 )
 
 // LogService 負責記錄系統事件
@@ -16,7 +15,6 @@ func (s *LogService) WriteLoginLog(userID uint, method, ip, userAgent string) er
 		LoginMethod: method,
 		IPAddress:   utils.PtrString(ip),
 		UserAgent:   utils.PtrString(userAgent),
-		LoginAt:     time.Now(),
 	}
 	return sql.AddLoginLog(log)
 }
