@@ -59,31 +59,52 @@ func (s *userService) GetUserByEmail(email string) (*dto.UserDTO, error) {
 }
 
 // 建立使用者
-func (s *userService) CreateUser(user *models.User, password string) error {
+func (s *userService) CreateUser(user *models.User, password string) (*dto.UserDTO, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	user.PasswordHash = utils.PtrString(string(hash))
-	return sql.AddUser(user)
+	if err := sql.AddUser(user); err != nil {
+		return nil, err
+	}
+	return dto.ModelToDTO(user, dto.ToUserDTO), nil
 }
 
 // 更新使用者
-func (s *userService) UpdateUser(user *models.User) error {
-	return sql.UpdateUser(user)
+func (s *userService) UpdateUser(user *models.User) (*dto.UserDTO, error) {
+	if err := sql.UpdateUser(user); err != nil {
+		return nil, err
+	}
+	return dto.ModelToDTO(user, dto.ToUserDTO), nil
 }
 
 // 刪除使用者
-func (s *userService) DeleteUser(userID uint) error {
-	return sql.DeleteUser(userID)
+func (s *userService) DeleteUser(userID uint) (*dto.UserDTO, error) {
+	user, err := sql.GetUserByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if err := sql.DeleteUser(userID); err != nil {
+		return nil, err
+	}
+	return dto.ModelToDTO(user, dto.ToUserDTO), nil
 }
 
 // 取得異動紀錄
-func (s *userService) GetUserUpdateLogs(userID uint, limit int) ([]models.UserUpdateLog, error) {
-	return sql.GetUserUpdateLogs(userID, limit)
+func (s *userService) GetUserUpdateLogs(userID uint, limit int) ([]dto.UserUpdateLogDTO, error) {
+	logs, err := sql.GetUserUpdateLogs(userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	return dto.ToUserUpdateLogDTOs(logs), nil
 }
 
 // 取得密碼異動紀錄
-func (s *userService) GetUserPasswordUpdateLogs(userID uint, limit int) ([]models.UserUpdateLog, error) {
-	return sql.GetUserPasswordUpdateLogs(userID, limit)
+func (s *userService) GetUserPasswordUpdateLogs(userID uint, limit int) ([]dto.UserUpdateLogDTO, error) {
+	logs, err := sql.GetUserPasswordUpdateLogs(userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	return dto.ToUserUpdateLogDTOs(logs), nil
 }
