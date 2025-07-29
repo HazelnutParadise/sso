@@ -22,6 +22,9 @@ func (h *authHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
+
+	// todo: 發配JWT
+
 	c.JSON(http.StatusOK, gin.H{"message": "login success", "data": user})
 }
 
