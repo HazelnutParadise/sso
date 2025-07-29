@@ -6,9 +6,10 @@ func PtrString(s string) *string {
 	return &s
 }
 
-func Deref(s *string) string {
+func Deref[T any](s *T) T {
 	if s == nil {
-		return ""
+		var zero T
+		return zero
 	}
 	return *s
 }

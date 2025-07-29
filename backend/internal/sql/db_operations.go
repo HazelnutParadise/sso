@@ -2,6 +2,7 @@ package sql
 
 import (
 	"sso/internal/sql/models"
+	"sso/internal/utils"
 	"time"
 
 	"gorm.io/gorm"
@@ -224,13 +225,21 @@ func AddLoginLog(tx *gorm.DB,
 	userID uint,
 	loginMethod string, isOAuth bool,
 	ipAddress *string, userAgent *string,
+	isSuccess bool, errorType *error,
 ) error {
+	var errorMessage *string
+	if errorType != nil {
+		errorMsg := utils.Deref(errorType).Error()
+		errorMessage = &errorMsg
+	}
 	log := &models.LoginLog{
-		UserID:      userID,
-		LoginMethod: loginMethod,
-		IsOAuth:     isOAuth,
-		IPAddress:   ipAddress,
-		UserAgent:   userAgent,
+		UserID:       userID,
+		LoginMethod:  loginMethod,
+		IsOAuth:      isOAuth,
+		IPAddress:    ipAddress,
+		UserAgent:    userAgent,
+		IsSuccess:    isSuccess,
+		ErrorMessage: errorMessage,
 	}
 	dbx := getDBOrTx(tx)
 	return dbx.Create(log).Error
@@ -242,7 +251,7 @@ func GetUserLoginLogs(tx *gorm.DB, userID uint, limit int) ([]models.LoginLog, e
 	}
 
 	var logs []models.LoginLog
-	query := tx.Where("user_id = ?", userID).Order("login_at desc").Limit(limit)
+	query := tx.Where("user_id = ?", userID).Order("attempted_at desc").Limit(limit)
 	if err := query.Find(&logs).Error; err != nil {
 		return nil, err
 	}
@@ -255,7 +264,7 @@ func GetLoginLogsByIP(tx *gorm.DB, ipAddress string, limit int) ([]models.LoginL
 	}
 
 	var logs []models.LoginLog
-	query := tx.Where("ip_address = ?", ipAddress).Order("login_at desc").Limit(limit)
+	query := tx.Where("ip_address = ?", ipAddress).Order("attempted_at desc").Limit(limit)
 	if err := query.Find(&logs).Error; err != nil {
 		return nil, err
 	}
@@ -268,7 +277,7 @@ func GetUserLoginLogsByIP(tx *gorm.DB, userID uint, ipAddress string, limit int)
 	}
 
 	var logs []models.LoginLog
-	query := tx.Where("user_id = ? AND ip_address = ?", userID, ipAddress).Order("login_at desc").Limit(limit)
+	query := tx.Where("user_id = ? AND ip_address = ?", userID, ipAddress).Order("attempted_at desc").Limit(limit)
 	if err := query.Find(&logs).Error; err != nil {
 		return nil, err
 	}
@@ -281,7 +290,7 @@ func GetLoginLogsBetweenDates(tx *gorm.DB, start, end time.Time, limit int) ([]m
 	}
 
 	var logs []models.LoginLog
-	query := tx.Where("login_at BETWEEN ? AND ?", start, end).Order("login_at desc").Limit(limit)
+	query := tx.Where("attempted_at BETWEEN ? AND ?", start, end).Order("attempted_at desc").Limit(limit)
 	if err := query.Find(&logs).Error; err != nil {
 		return nil, err
 	}
@@ -294,7 +303,7 @@ func GetUserLoginLogsBetweenDates(tx *gorm.DB, userID uint, start, end time.Time
 	}
 
 	var logs []models.LoginLog
-	query := tx.Where("user_id = ? AND (login_at BETWEEN ? AND ?)", userID, start, end).Order("login_at desc").Limit(limit)
+	query := tx.Where("user_id = ? AND (attempted_at BETWEEN ? AND ?)", userID, start, end).Order("attempted_at desc").Limit(limit)
 	if err := query.Find(&logs).Error; err != nil {
 		return nil, err
 	}
