@@ -6,8 +6,9 @@ import "time"
 type LoginLog struct {
 	ID          uint      `gorm:"primaryKey"`
 	UserID      uint      `gorm:"not null"`
-	LoginMethod string    `gorm:"size:50;not null"` // password / google / github…
-	IPAddress   *string   `gorm:"size:45"`          // 可存 IPv4/IPv6
+	LoginMethod string    `gorm:"size:50;not null"`       // password / google / github…
+	IsOAuth     bool      `gorm:"not null;default:false"` // 是否為 OAuth 登入
+	IPAddress   *string   `gorm:"size:45"`                // 可存 IPv4/IPv6
 	UserAgent   *string   `gorm:"size:500"`
 	LoginAt     time.Time `gorm:"autoCreateTime"`
 

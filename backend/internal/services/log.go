@@ -9,10 +9,11 @@ import (
 // LogService 負責記錄系統事件
 type logService struct{}
 
-func (s *logService) WriteLoginLog(userID uint, method, ip, userAgent string) error {
+func (s *logService) WriteLoginLog(userID uint, method, ip string, isOAuth bool, userAgent string) error {
 	log := &models.LoginLog{
 		UserID:      userID,
 		LoginMethod: method,
+		IsOAuth:     isOAuth,
 		IPAddress:   utils.PtrString(ip),
 		UserAgent:   utils.PtrString(userAgent),
 	}
