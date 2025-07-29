@@ -1,7 +1,6 @@
 package services
 
 var (
-	AuthService          = &authenticationService{}
 	AuthorizeService     = &authorizationService{}
 	TokenService         = &tokenService{}
 	UserService          = &userService{}

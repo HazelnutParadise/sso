@@ -15,3 +15,9 @@ type LoginLog struct {
 	// 外鍵
 	User User `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
+
+const (
+	LoginMethodPassword = "password"
+	LoginMethodGoogle   = "google"
+	LoginMethodGithub   = "github"
+)
