@@ -5,7 +5,6 @@ import (
 	"sso/internal/logger"
 	"sso/internal/sql"
 	"sso/internal/sql/models"
-	"time"
 
 	"sso/internal/services/dto"
 
@@ -27,59 +26,20 @@ var (
 func (s *userService) Login(email, password string) (*dto.UserDTO, error) {
 	ip := getClientIP()    // 假設有方法獲取客戶端 IP
 	userAgent := "unknown" // todo
-
-	user, err := sql.GetUserByEmail(nil, email)
+	user, err := loginCheckAndReturnUser(email, password)
 	if err != nil {
-		errorType := LoginErr_InvalidCredentials
 		if logErr := sql.AddLoginLog(nil,
 			0,
 			models.LoginMethodPassword, false,
 			&ip, &userAgent,
-			false, &errorType); logErr != nil {
+			false, &err); logErr != nil {
 			logger.Log.WithError(logErr).Error("登入失敗，記錄日誌失敗")
 		}
-		return nil, errorType
 	}
-	if user.IsActive == false {
-		errorType := LoginErr_AccountSuspended
-		if logErr := sql.AddLoginLog(nil,
-			0,
-			models.LoginMethodPassword, false,
-			&ip, &userAgent,
-			false, &errorType); logErr != nil {
-			logger.Log.WithError(logErr).Error("登入失敗，記錄日誌失敗")
-		}
-		return nil, errorType
-	}
-	if user.PasswordHash == nil {
-		// 如果沒有設定密碼，則無法登入
-		errorType := LoginErr_PasswordNotSet
-		if logErr := sql.AddLoginLog(nil,
-			0,
-			models.LoginMethodPassword, false,
-			&ip, &userAgent,
-			false, &errorType); logErr != nil {
-			logger.Log.WithError(logErr).Error("登入失敗，記錄日誌失敗")
-		}
-		return nil, errorType
-	}
-	if err := bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(password)); err != nil {
-		errorType := LoginErr_InvalidCredentials
-		if logErr := sql.AddLoginLog(nil,
-			0,
-			models.LoginMethodPassword, false,
-			&ip, &userAgent,
-			false, &errorType); logErr != nil {
-			logger.Log.WithError(logErr).Error("登入失敗，記錄日誌失敗")
-		}
-		return nil, errorType
-	}
-	now := time.Now()
-	user.LastLoginAt = &now
 
 	err = sql.Transaction(func(tx *gorm.DB) error {
 		// 更新最後登入時間
-		if err := sql.UpdateUser(tx, user); err != nil {
+		if err := sql.UpdateUserLoginTime(tx, user.ID); err != nil {
 			return err
 		}
 		if err := sql.AddLoginLog(tx,
@@ -93,9 +53,10 @@ func (s *userService) Login(email, password string) (*dto.UserDTO, error) {
 		return nil
 	})
 	if err != nil {
+		logger.Log.WithError(err).Error("登入失敗，資料已回滾")
 		return nil, LoginErr_UnknownError
 	}
-	return dto.ToUserDTO(user), nil
+	return user, nil
 }
 
 // 登出：可記錄登出日誌
@@ -103,6 +64,25 @@ func (s *userService) Logout(userID uint) error {
 	// 實際可記錄登出日誌或做其它處理
 	// todo
 	return nil
+}
+
+func loginCheckAndReturnUser(email string, password string) (*dto.UserDTO, error) {
+	user, err := sql.GetUserByEmail(nil, email)
+	if err != nil {
+		return nil, LoginErr_InvalidCredentials
+	}
+	if user.IsActive == false {
+		return nil, LoginErr_AccountSuspended
+	}
+	if user.PasswordHash == nil {
+		// 如果沒有設定密碼，則無法登入
+		return nil, LoginErr_PasswordNotSet
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(password)); err != nil {
+		return nil, LoginErr_InvalidCredentials
+	}
+	dtoUser := dto.ToUserDTO(user)
+	return dtoUser, nil
 }
 
 func getClientIP() string {

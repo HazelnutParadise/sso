@@ -21,7 +21,7 @@ func (s *tokenService) GenerateToken(userID, clientID uint, scope string, expire
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	err := sql.AddOauthToken(token)
+	err := sql.AddOauthToken(nil, token)
 	// 假設有 dto.ToTokenDTO
 	// return dto.ModelToDTO(token, dto.ToTokenDTO), err
 	return token, err // TODO: 實作 DTO 轉換
@@ -29,7 +29,7 @@ func (s *tokenService) GenerateToken(userID, clientID uint, scope string, expire
 
 // 驗證 token
 func (s *tokenService) ValidateToken(accessToken string) (*models.OAuthToken, error) {
-	token, err := sql.GetOauthTokenByAccessToken(accessToken)
+	token, err := sql.GetOauthTokenByAccessToken(nil, accessToken)
 	if err != nil {
 		return nil, errors.New("token 無效")
 	}
@@ -41,7 +41,7 @@ func (s *tokenService) ValidateToken(accessToken string) (*models.OAuthToken, er
 
 // 失效 token
 func (s *tokenService) RevokeToken(tokenID uint) error {
-	return sql.DeleteOauthToken(tokenID)
+	return sql.DeleteOauthToken(nil, tokenID)
 }
 
 // 工具

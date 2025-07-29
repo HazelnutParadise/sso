@@ -74,6 +74,12 @@ func GetUserByProviderUserID(tx *gorm.DB, providerName, providerUserID string) (
 	return &user, nil
 }
 
+func UpdateUserLoginTime(tx *gorm.DB, userID uint) error {
+	dbx := getDBOrTx(tx)
+	lastLoginAt := time.Now()
+	return dbx.Model(&models.User{}).Where("id = ?", userID).Update("last_login_at", lastLoginAt).Error
+}
+
 func UpdateUser(tx *gorm.DB, user *models.User) error {
 	dbx := getDBOrTx(tx)
 	// 先查詢原始資料
@@ -174,8 +180,10 @@ func GetUserPasswordUpdateLogs(tx *gorm.DB, userID uint, limit int) ([]models.Us
 
 // SuspendUser 停權使用者並記錄原因
 func SuspendUser(tx *gorm.DB, userID uint, reason string, suspendedBy *uint) error {
+	dbx := getDBOrTx(tx)
+
 	// 1. 更新使用者狀態
-	if err := tx.Model(&models.User{}).Where("id = ?", userID).Update("is_active", false).Error; err != nil {
+	if err := dbx.Model(&models.User{}).Where("id = ?", userID).Update("is_active", false).Error; err != nil {
 		return err
 	}
 	// 2. 寫入停權紀錄
@@ -185,7 +193,7 @@ func SuspendUser(tx *gorm.DB, userID uint, reason string, suspendedBy *uint) err
 		SuspendedAt: time.Now(),
 		SuspendedBy: suspendedBy,
 	}
-	if err := tx.Create(&log).Error; err != nil {
+	if err := dbx.Create(&log).Error; err != nil {
 		return err
 	}
 	return nil
@@ -210,8 +218,10 @@ func GetSingleUserSuspendedLogs(tx *gorm.DB, userID uint, limit int) ([]models.S
 		return nil, gorm.ErrInvalidValue
 	}
 
+	dbx := getDBOrTx(tx)
+
 	var logs []models.SuspendedUserLog
-	if err := tx.Where("user_id = ?", userID).Order("suspended_at desc").Limit(limit).Find(&logs).Error; err != nil {
+	if err := dbx.Where("user_id = ?", userID).Order("suspended_at desc").Limit(limit).Find(&logs).Error; err != nil {
 		return nil, err
 	}
 	return logs, nil
@@ -250,8 +260,9 @@ func GetUserLoginLogs(tx *gorm.DB, userID uint, limit int) ([]models.LoginLog, e
 		return nil, gorm.ErrInvalidValue
 	}
 
+	dbx := getDBOrTx(tx)
 	var logs []models.LoginLog
-	query := tx.Where("user_id = ?", userID).Order("attempted_at desc").Limit(limit)
+	query := dbx.Where("user_id = ?", userID).Order("attempted_at desc").Limit(limit)
 	if err := query.Find(&logs).Error; err != nil {
 		return nil, err
 	}
@@ -315,36 +326,44 @@ func AddOauthClient(tx *gorm.DB, client *models.OAuthClient) error {
 }
 
 func GetOauthClientByID(tx *gorm.DB, ID uint) (*models.OAuthClient, error) {
+	dbx := getDBOrTx(tx)
+
 	var client models.OAuthClient
-	if err := tx.First(&client, ID).Error; err != nil {
+	if err := dbx.First(&client, ID).Error; err != nil {
 		return nil, err
 	}
 	return &client, nil
 }
 
 func GetOauthClientByClientID(tx *gorm.DB, clientID string) (*models.OAuthClient, error) {
+	dbx := getDBOrTx(tx)
+
 	var client models.OAuthClient
-	if err := tx.Where("client_id = ?", clientID).First(&client).Error; err != nil {
+	if err := dbx.Where("client_id = ?", clientID).First(&client).Error; err != nil {
 		return nil, err
 	}
 	return &client, nil
 }
 
 func UpdateOauthClient(tx *gorm.DB, client *models.OAuthClient) error {
+	dbx := getDBOrTx(tx)
+
 	// 先查詢原始資料
 	var oldClient models.OAuthClient
-	if err := tx.First(&oldClient, client.ID).Error; err != nil {
+	if err := dbx.First(&oldClient, client.ID).Error; err != nil {
 		return err
 	}
 	return tx.Save(client).Error
 }
 
 func DeleteOauthClient(tx *gorm.DB, ID uint) error {
-	return tx.Delete(&models.OAuthClient{}, ID).Error
+	dbx := getDBOrTx(tx)
+	return dbx.Delete(&models.OAuthClient{}, ID).Error
 }
 
 func AddOauthToken(tx *gorm.DB, token *models.OAuthToken) error {
-	return tx.Create(token).Error
+	dbx := getDBOrTx(tx)
+	return dbx.Create(token).Error
 }
 
 func GetOauthTokenByID(tx *gorm.DB, ID uint) (*models.OAuthToken, error) {
@@ -373,8 +392,10 @@ func GetOauthTokensByClientID(tx *gorm.DB, clientID uint) ([]models.OAuthToken, 
 
 // 依 access_token 查詢 OAuthToken
 func GetOauthTokenByAccessToken(tx *gorm.DB, accessToken string) (*models.OAuthToken, error) {
+	dbx := getDBOrTx(tx)
+
 	var token models.OAuthToken
-	err := tx.Where("access_token = ?", accessToken).First(&token).Error
+	err := dbx.Where("access_token = ?", accessToken).First(&token).Error
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +412,8 @@ func UpdateOauthToken(tx *gorm.DB, token *models.OAuthToken) error {
 }
 
 func DeleteOauthToken(tx *gorm.DB, ID uint) error {
-	return tx.Delete(&models.OAuthToken{}, ID).Error
+	dbx := getDBOrTx(tx)
+	return dbx.Delete(&models.OAuthToken{}, ID).Error
 }
 
 // 取得 string pointer 的值，若為 nil 則回傳空字串

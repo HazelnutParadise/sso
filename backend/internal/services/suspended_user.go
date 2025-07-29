@@ -9,21 +9,21 @@ import (
 type suspendedUserService struct{}
 
 func (s *suspendedUserService) SuspendUser(userID uint, reason string, suspendedBy *uint) error {
-	return sql.SuspendUser(userID, reason, suspendedBy)
+	return sql.SuspendUser(nil, userID, reason, suspendedBy)
 }
 
 func (s *suspendedUserService) UnsuspendUser(userID uint) error {
 	// 解鎖：將 is_active 改回 true
-	user, err := sql.GetUserByID(userID)
+	user, err := sql.GetUserByID(nil, userID)
 	if err != nil {
 		return err
 	}
 	user.IsActive = true
-	return sql.UpdateUser(user)
+	return sql.UpdateUser(nil, user)
 }
 
 func (s *suspendedUserService) GetSuspendedLogs(userID uint, limit int) ([]models.SuspendedUserLog, error) {
-	logs, err := sql.GetSingleUserSuspendedLogs(userID, limit)
+	logs, err := sql.GetSingleUserSuspendedLogs(nil, userID, limit)
 	if err != nil {
 		return nil, err
 	}
