@@ -12,6 +12,11 @@ type authHandler struct{}
 func (h *authHandler) Login(c *gin.Context) {
 	email := c.PostForm("email")
 	password := c.PostForm("password")
+	if email == "" || password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "email and password are required"})
+		return
+	}
+
 	user, err := services.UserService.Login(email, password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
