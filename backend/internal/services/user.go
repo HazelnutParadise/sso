@@ -16,10 +16,10 @@ import (
 type userService struct{}
 
 var (
-	LoginErr_InvalidCredentials = errors.New("帳號或密碼錯誤")
-	LoginErr_AccountSuspended   = errors.New("此帳號已停權")
-	LoginErr_PasswordNotSet     = errors.New("此帳號未設定密碼")
-	LoginErr_UnknownError       = errors.New("登入時發生錯誤")
+	ErrLogin_InvalidCredentials = errors.New("帳號或密碼錯誤")
+	ErrLogin_AccountSuspended   = errors.New("此帳號已停權")
+	ErrLogin_PasswordNotSet     = errors.New("此帳號未設定密碼")
+	ErrLogin_UnknownError       = errors.New("登入時發生錯誤")
 )
 
 // 登入：驗證帳號密碼，成功回傳 user
@@ -54,7 +54,7 @@ func (s *userService) Login(email, password string) (*dto.UserDTO, error) {
 	})
 	if err != nil {
 		logger.Log.WithError(err).Error("登入失敗，資料已回滾")
-		return nil, LoginErr_UnknownError
+		return nil, ErrLogin_UnknownError
 	}
 	return user, nil
 }
@@ -69,17 +69,17 @@ func (s *userService) Logout(userID uint) error {
 func loginCheckAndReturnUser(email string, password string) (*dto.UserDTO, error) {
 	user, err := sql.GetUserByEmail(nil, email)
 	if err != nil {
-		return nil, LoginErr_InvalidCredentials
+		return nil, ErrLogin_InvalidCredentials
 	}
-	if user.IsActive == false {
-		return nil, LoginErr_AccountSuspended
+	if !user.IsActive {
+		return nil, ErrLogin_AccountSuspended
 	}
 	if user.PasswordHash == nil {
 		// 如果沒有設定密碼，則無法登入
-		return nil, LoginErr_PasswordNotSet
+		return nil, ErrLogin_PasswordNotSet
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(password)); err != nil {
-		return nil, LoginErr_InvalidCredentials
+		return nil, ErrLogin_InvalidCredentials
 	}
 	dtoUser := dto.ToUserDTO(user)
 	return dtoUser, nil
