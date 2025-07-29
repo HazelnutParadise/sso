@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"sso/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,7 +10,14 @@ import (
 type authHandler struct{}
 
 func (h *authHandler) Login(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "login success (stub)"})
+	email := c.PostForm("email")
+	password := c.PostForm("password")
+	user, err := services.UserService.Login(email, password)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "login success", "data": user})
 }
 
 func (h *authHandler) Logout(c *gin.Context) {
