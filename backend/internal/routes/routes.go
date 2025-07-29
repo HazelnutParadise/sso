@@ -1,16 +1,18 @@
 package routes
 
 import (
+	"sso/internal/handlers"
+
 	"github.com/gin-gonic/gin"
 )
 
 func Setup(app *gin.Engine) {
-	// Define your routes here
-	app.GET("/example", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello, World!",
-		})
-	})
+	// 一般帳密登入/登出
+	app.POST("/login", handlers.AuthHandlers.Login)
+	app.POST("/logout", handlers.AuthHandlers.Logout)
 
-	// Add more routes as needed
+	// OAuth 流程
+	app.GET("/oauth/authorize", handlers.OAuthHandlers.Authorize)
+	app.POST("/oauth/token", handlers.OAuthHandlers.Token)
+	app.GET("/oauth/callback", handlers.OAuthHandlers.Callback)
 }
