@@ -139,14 +139,21 @@ func UpdateUser(tx *gorm.DB, user *models.User) error {
 	toUpdateFields = append(toUpdateFields, "updated_at") // Always update updated_at
 	user.UpdatedAt = now
 
-	if err := dbx.Model(&models.User{}).Where("id = ?", user.ID).Select(toUpdateFields).Updates(user).Error; err != nil {
-		return err
-	}
-	for _, log := range updateLogs {
-		if err := dbx.Create(&log).Error; err != nil {
+	err := dbx.Transaction(func(tx *gorm.DB) error {
+		if err := dbx.Model(&models.User{}).Where("id = ?", user.ID).Select(toUpdateFields).Updates(user).Error; err != nil {
 			return err
 		}
+		for _, log := range updateLogs {
+			if err := dbx.Create(&log).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
 	}
+
 	return nil
 }
 
