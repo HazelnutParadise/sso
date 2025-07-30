@@ -58,3 +58,20 @@ func (h *authHandler) Register(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "register success"})
 }
+
+func (h *authHandler) GoogleLogin(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "google login (stub)"})
+}
+
+func (h *authHandler) GithubLogin(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "github login (stub)"})
+}
+
+func (h *authHandler) ExternalCallback(c *gin.Context) {
+	provider := c.Param("provider")
+	if provider != "google" && provider != "github" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "不支援的第三方登入提供者"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "oauth callback (stub)"})
+}

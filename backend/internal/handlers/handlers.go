@@ -1,6 +1,6 @@
 package handlers
 
 var (
-	AuthHandlers  = &authHandler{}
-	OAuthHandlers = &oauthHandler{}
+	AuthHandlers          = &authHandler{}
+	OAuthProviderHandlers = &oauthProviderHandler{}
 )
