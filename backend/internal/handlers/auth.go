@@ -27,7 +27,7 @@ func (h *authHandler) Login(c *gin.Context) {
 
 	// todo: 發配JWT
 
-	c.JSON(http.StatusOK, gin.H{"message": "login success", "data": user})
+	c.JSON(http.StatusOK, gin.H{"message": "login success", "user": user})
 }
 
 func (h *authHandler) Logout(c *gin.Context) {
