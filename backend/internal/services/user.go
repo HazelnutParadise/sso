@@ -8,6 +8,8 @@ import (
 
 	"sso/internal/services/dto"
 
+	"sso/internal/utils"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -20,6 +22,9 @@ var (
 	ErrLogin_AccountSuspended   = errors.New("此帳號已停權")
 	ErrLogin_PasswordNotSet     = errors.New("此帳號未設定密碼")
 	ErrLogin_UnknownError       = errors.New("登入時發生錯誤")
+
+	ErrRegister_EmailExists     = errors.New("此 email 已被註冊")
+	ErrRegister_PasswordHashing = errors.New("密碼雜湊失敗")
 )
 
 // 登入：驗證帳號密碼，成功回傳 user
@@ -64,6 +69,38 @@ func (s *userService) Logout(userID uint) error {
 	// 實際可記錄登出日誌或做其它處理
 	// todo
 	return nil
+}
+
+func (s *userService) Register(
+	email, password string, name string, avatarBase64 string,
+) (*dto.UserDTO, error) {
+	// 先檢查 email 是否已被註冊
+	existingUser, err := sql.GetUserByEmail(nil, email)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	if existingUser != nil {
+		return nil, ErrRegister_EmailExists
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MaxCost)
+	if err != nil {
+		return nil, ErrRegister_PasswordHashing
+	}
+	passwordHashStr := string(passwordHash)
+
+	// 創建新使用者
+	newUser := &models.User{
+		Email:        email,
+		Name:         &name,
+		Avatar:       utils.Base64ToBlob(avatarBase64),
+		PasswordHash: &passwordHashStr,
+	}
+	if err := sql.AddUser(nil, newUser); err != nil {
+		return nil, err
+	}
+
+	return dto.ToUserDTO(newUser), nil
 }
 
 func loginCheckAndReturnUser(email string, password string) (*dto.UserDTO, error) {

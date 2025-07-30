@@ -6,12 +6,12 @@ import (
 )
 
 type UserDTO struct {
-	ID          uint   `json:"id"`
-	Email       string `json:"email"`
-	Name        string `json:"name,omitempty"`
-	AvatarURL   string `json:"avatar_url,omitempty"`
-	IsActive    bool   `json:"is_active"`
-	LastLoginAt string `json:"last_login_at,omitempty"`
+	ID           uint   `json:"id"`
+	Email        string `json:"email"`
+	Name         string `json:"name,omitempty"`
+	AvatarBase64 string `json:"avatar_base64,omitempty"`
+	IsActive     bool   `json:"is_active"`
+	LastLoginAt  string `json:"last_login_at,omitempty"`
 }
 
 func ToUserDTO(u *models.User) *UserDTO {
@@ -19,11 +19,11 @@ func ToUserDTO(u *models.User) *UserDTO {
 		return nil
 	}
 	return &UserDTO{
-		ID:          u.ID,
-		Email:       u.Email,
-		Name:        utils.Deref(u.Name),
-		AvatarURL:   utils.Deref(u.AvatarURL),
-		IsActive:    u.IsActive,
-		LastLoginAt: utils.FormatTime(u.LastLoginAt),
+		ID:           u.ID,
+		Email:        u.Email,
+		Name:         utils.Deref(u.Name),
+		AvatarBase64: utils.BlobToBase64(*u.Avatar),
+		IsActive:     u.IsActive,
+		LastLoginAt:  utils.FormatTime(u.LastLoginAt),
 	}
 }

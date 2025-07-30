@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"encoding/base64"
 	"sso/internal/sql/models"
 	"sso/internal/utils"
 	"time"
@@ -102,13 +103,15 @@ func UpdateUser(tx *gorm.DB, user *models.User) error {
 			UpdatedAt: now,
 		})
 	}
-	if user.AvatarURL != nil && *user.AvatarURL != "" && (oldUser.AvatarURL == nil || *oldUser.AvatarURL != *user.AvatarURL) {
-		toUpdateFields = append(toUpdateFields, "avatar_url")
+	if user.Avatar != nil && (oldUser.Avatar == nil || !equalByteSlice(*oldUser.Avatar, *user.Avatar)) {
+		toUpdateFields = append(toUpdateFields, "avatar")
+		oldAvatarStr := base64.StdEncoding.EncodeToString(getBlobPointerValue(oldUser.Avatar))
+		newAvatarStr := base64.StdEncoding.EncodeToString(*user.Avatar)
 		updateLogs = append(updateLogs, models.UserUpdateLog{
 			UserID:    user.ID,
-			Field:     "avatar_url",
-			OldValue:  getStringPointerValue(oldUser.AvatarURL),
-			NewValue:  *user.AvatarURL,
+			Field:     "avatar",
+			OldValue:  oldAvatarStr,
+			NewValue:  newAvatarStr,
 			UpdatedAt: now,
 		})
 	}
@@ -427,6 +430,28 @@ func DeleteOauthToken(tx *gorm.DB, ID uint) error {
 func getStringPointerValue(ptr *string) string {
 	if ptr == nil {
 		return ""
+	}
+	return *ptr
+}
+
+// 取得 []byte pointer 的值，若為 nil 則回傳空 slice
+// 比較兩個 []byte 是否相等
+func equalByteSlice(a, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// 取得 []byte pointer 的值，若為 nil 則回傳空 slice
+func getBlobPointerValue(ptr *[]byte) []byte {
+	if ptr == nil {
+		return []byte{}
 	}
 	return *ptr
 }
