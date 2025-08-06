@@ -28,6 +28,16 @@ func Setup(app *gin.Engine) {
 			}
 		}
 
+		// 需要認證的路由
+		apiAuthenticatedGp := apiGp.Group("/")
+		apiAuthenticatedGp.Use(handlers.AuthHandlers.GetJWTMiddleware())
+		{
+			// 獲取用戶資料
+			apiAuthenticatedGp.GET("/profile", handlers.AuthHandlers.GetProfile)
+			// 刷新 token（需要認證）
+			apiAuthenticatedGp.POST("/auth/refresh", handlers.AuthHandlers.RefreshToken)
+		}
+
 		apiOauthGp := apiGp.Group("/oauth")
 		{
 			apiOauthGp.GET("/jwks.json", handlers.OAuthProviderHandlers.JWKS)

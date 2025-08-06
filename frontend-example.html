@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSO JWT Cookie 測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .response {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>SSO JWT Cookie 測試頁面</h1>
+
+    <div class="section">
+        <h2>1. 登入</h2>
+        <input type="email" id="email" placeholder="Email" value="user@example.com">
+        <input type="password" id="password" placeholder="Password" value="password123">
+        <button onclick="login()">登入</button>
+        <div id="loginResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. 第三方登入（模擬）</h2>
+        <button onclick="externalLogin('google')">Google 登入</button>
+        <button onclick="externalLogin('github')">GitHub 登入</button>
+        <div id="externalResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. 獲取用戶資料</h2>
+        <button onclick="getProfile()">獲取 Profile</button>
+        <div id="profileResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. 刷新 Token</h2>
+        <button onclick="refreshToken()">刷新 Token</button>
+        <div id="refreshResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h2>5. 登出</h2>
+        <button onclick="logout()">登出</button>
+        <div id="logoutResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h2>Cookie 狀態</h2>
+        <button onclick="showCookies()">顯示 Cookies</button>
+        <div id="cookieStatus" class="response"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+
+        // 登入
+        async function login() {
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include', // 重要：包含 Cookie
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                document.getElementById('loginResponse').innerHTML =
+                    `<strong>狀態:</strong> ${response.status}<br>
+                     <strong>回應:</strong> ${JSON.stringify(data, null, 2)}`;
+
+                // 顯示 Cookie 狀態
+                showCookies();
+            } catch (error) {
+                document.getElementById('loginResponse').innerHTML =
+                    `<strong>錯誤:</strong> ${error.message}`;
+            }
+        }
+
+        // 第三方登入回調（模擬）
+        async function externalLogin(provider) {
+            try {
+                const response = await fetch(`${API_BASE}/auth/external/callback/${provider}`, {
+                    method: 'GET',
+                    credentials: 'include', // 重要：包含 Cookie
+                });
+
+                const data = await response.json();
+                document.getElementById('externalResponse').innerHTML =
+                    `<strong>狀態:</strong> ${response.status}<br>
+                     <strong>回應:</strong> ${JSON.stringify(data, null, 2)}`;
+
+                // 顯示 Cookie 狀態
+                showCookies();
+            } catch (error) {
+                document.getElementById('externalResponse').innerHTML =
+                    `<strong>錯誤:</strong> ${error.message}`;
+            }
+        }
+
+        // 獲取用戶資料
+        async function getProfile() {
+            try {
+                const response = await fetch(`${API_BASE}/profile`, {
+                    method: 'GET',
+                    credentials: 'include', // 重要：包含 Cookie
+                });
+
+                const data = await response.json();
+                document.getElementById('profileResponse').innerHTML =
+                    `<strong>狀態:</strong> ${response.status}<br>
+                     <strong>回應:</strong> ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                document.getElementById('profileResponse').innerHTML =
+                    `<strong>錯誤:</strong> ${error.message}`;
+            }
+        }
+
+        // 刷新 Token
+        async function refreshToken() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/refresh`, {
+                    method: 'POST',
+                    credentials: 'include', // 重要：包含 Cookie
+                });
+
+                const data = await response.json();
+                document.getElementById('refreshResponse').innerHTML =
+                    `<strong>狀態:</strong> ${response.status}<br>
+                     <strong>回應:</strong> ${JSON.stringify(data, null, 2)}`;
+
+                // 顯示 Cookie 狀態
+                showCookies();
+            } catch (error) {
+                document.getElementById('refreshResponse').innerHTML =
+                    `<strong>錯誤:</strong> ${error.message}`;
+            }
+        }
+
+        // 登出
+        async function logout() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/logout`, {
+                    method: 'POST',
+                    credentials: 'include', // 重要：包含 Cookie
+                });
+
+                const data = await response.json();
+                document.getElementById('logoutResponse').innerHTML =
+                    `<strong>狀態:</strong> ${response.status}<br>
+                     <strong>回應:</strong> ${JSON.stringify(data, null, 2)}`;
+
+                // 顯示 Cookie 狀態
+                showCookies();
+            } catch (error) {
+                document.getElementById('logoutResponse').innerHTML =
+                    `<strong>錯誤:</strong> ${error.message}`;
+            }
+        }
+
+        // 顯示 Cookie 狀態
+        function showCookies() {
+            const cookies = document.cookie;
+            const jwtCookie = cookies.split('; ').find(row => row.startsWith('jwt='));
+
+            document.getElementById('cookieStatus').innerHTML =
+                `<strong>所有 Cookies:</strong> ${cookies || '(無)'}<br>
+                 <strong>JWT Cookie:</strong> ${jwtCookie ? jwtCookie.substring(4) : '(無)'}`;
+        }
+
+        // 頁面載入時顯示 Cookie 狀態
+        window.onload = showCookies;
+    </script>
+</body>
+
+</html>

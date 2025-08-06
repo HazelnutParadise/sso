@@ -128,3 +128,81 @@ func getClientIP() string {
 	// todo
 	return ""
 }
+
+// LoginOrRegisterWithOAuth 第三方登入或註冊用戶
+// 如果用戶不存在則自動註冊，如果存在則直接登入
+func (s *userService) LoginOrRegisterWithOAuth(email, name, provider string, providerUserID string) (*dto.UserDTO, error) {
+	ip := getClientIP()
+	userAgent := "unknown" // todo
+
+	// 檢查用戶是否已存在
+	existingUser, err := sql.GetUserByEmail(nil, email)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	var user *models.User
+
+	if existingUser != nil {
+		// 用戶已存在，檢查是否停權
+		if !existingUser.IsActive {
+			return nil, ErrLogin_AccountSuspended
+		}
+		user = existingUser
+	} else {
+		// 用戶不存在，自動註冊
+		newUser := &models.User{
+			Email:        email,
+			Name:         &name,
+			PasswordHash: nil, // 第三方登入用戶沒有密碼
+			IsActive:     true,
+		}
+
+		err = sql.Transaction(func(tx *gorm.DB) error {
+			if err := sql.AddUser(tx, newUser); err != nil {
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
+		user = newUser
+	}
+
+	// 更新登入時間和記錄日誌
+	err = sql.Transaction(func(tx *gorm.DB) error {
+		// 更新最後登入時間
+		if err := sql.UpdateUserLoginTime(tx, user.ID); err != nil {
+			return err
+		}
+
+		// 記錄登入日誌
+		var loginMethod string
+		switch provider {
+		case "google":
+			loginMethod = models.LoginMethodGoogle
+		case "github":
+			loginMethod = models.LoginMethodGithub
+		default:
+			loginMethod = models.LoginMethodGoogle // 默認
+		}
+
+		if err := sql.AddLoginLog(tx,
+			user.ID,
+			loginMethod, true,
+			&ip, &userAgent,
+			true, nil); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	dtoUser := dto.ToUserDTO(user)
+	return dtoUser, nil
+}
