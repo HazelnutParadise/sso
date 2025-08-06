@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sso/internal/env"
 	"sso/internal/routes"
 	"sso/internal/sql"
 
@@ -9,6 +10,8 @@ import (
 
 func main() {
 	sql.ConnectAndInitDB()
+
+	gin.SetMode(env.GIN_MODE)
 
 	// Initialize the application
 	app := gin.Default()

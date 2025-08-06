@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"sso/internal/env"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -10,5 +12,5 @@ func init() {
 	Log.SetFormatter(&logrus.TextFormatter{
 		FullTimestamp: true,
 	})
-	Log.SetLevel(logrus.DebugLevel)
+	Log.SetLevel(env.LOG_LEVEL)
 }
