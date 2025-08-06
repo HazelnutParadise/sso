@@ -3,6 +3,7 @@ package session
 import (
 	"errors"
 	"net/http"
+	"sso/internal/env"
 	"strings"
 	"time"
 
@@ -10,9 +11,9 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-const (
-	identityKey  = "user_id"
-	jwtSecret    = "secret key"   // 在生產環境中應該從環境變數讀取
+var (
+	jwtSecret    = env.JWT_SECRET // 在生產環境中應該從環境變數讀取
+	jwtAlgorithm = jwt.SigningMethodHS512
 	tokenTimeout = time.Hour * 24 // 24 小時
 	cookieName   = "jwt"
 )
@@ -46,13 +47,21 @@ func GenerateToken(user *JWTUser) (string, error) {
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// 使用配置的簽名算法
+	signingMethod := jwtAlgorithm
+	token := jwt.NewWithClaims(signingMethod, claims)
 	return token.SignedString([]byte(jwtSecret))
 }
 
 // ValidateToken 驗證 JWT token
 func ValidateToken(tokenString string) (*JWTUser, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// 驗證簽名方法是否正確
+
+		expectedMethod := jwtAlgorithm
+		if token.Method != expectedMethod {
+			return nil, errors.New("invalid signing method")
+		}
 		return []byte(jwtSecret), nil
 	})
 

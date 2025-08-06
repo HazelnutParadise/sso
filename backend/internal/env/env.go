@@ -9,8 +9,9 @@ import (
 
 // todo: 新增.env檔案
 var (
-	GIN_MODE  string
-	LOG_LEVEL logrus.Level
+	GIN_MODE   string
+	LOG_LEVEL  logrus.Level
+	JWT_SECRET string
 )
 
 func init() {
@@ -22,6 +23,8 @@ func init() {
 		GIN_MODE = gin.DebugMode
 		LOG_LEVEL = logrus.DebugLevel
 	}
+
+	JWT_SECRET = getEnvOrDefault("JWT_SECRET", "secret key")
 }
 
 func getEnvOrDefault(key, defaultValue string) string {
