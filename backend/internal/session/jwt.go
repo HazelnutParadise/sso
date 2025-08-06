@@ -31,18 +31,14 @@ type JWTUser struct {
 
 // JWT Claims 結構
 type JWTClaims struct {
-	UserID uint   `json:"user_id"`
-	Email  string `json:"email"`
-	Name   string `json:"name"`
+	*JWTUser // 嵌入 JWTUser
 	jwt.RegisteredClaims
 }
 
 // GenerateToken 生成 JWT token
 func GenerateToken(user *JWTUser) (string, error) {
 	claims := JWTClaims{
-		UserID: user.ID,
-		Email:  user.Email,
-		Name:   user.Name,
+		JWTUser: user,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenTimeout)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -65,11 +61,7 @@ func ValidateToken(tokenString string) (*JWTUser, error) {
 	}
 
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
-		return &JWTUser{
-			ID:    claims.UserID,
-			Email: claims.Email,
-			Name:  claims.Name,
-		}, nil
+		return claims.JWTUser, nil
 	}
 
 	return nil, ErrInvalidToken
