@@ -9,9 +9,16 @@ import (
 
 // todo: 新增.env檔案
 var (
-	GIN_MODE   string
-	LOG_LEVEL  logrus.Level
-	JWT_SECRET string
+	GIN_MODE  string
+	LOG_LEVEL logrus.Level
+
+	JWT_SECRET = getEnvOrDefault("JWT_SECRET", "secret key")
+
+	DB_HOST     = getEnvOrDefault("DB_HOST", "localhost")
+	DB_PORT     = getEnvOrDefault("DB_PORT", "3306")
+	DB_NAME     = getEnvOrDefault("DB_NAME", "sso")
+	DB_USER     = getEnvOrDefault("DB_USER", "root")
+	DB_PASSWORD = getEnvOrDefault("DB_PASSWORD", "password")
 )
 
 func init() {
@@ -23,8 +30,6 @@ func init() {
 		GIN_MODE = gin.DebugMode
 		LOG_LEVEL = logrus.DebugLevel
 	}
-
-	JWT_SECRET = getEnvOrDefault("JWT_SECRET", "secret key")
 }
 
 func getEnvOrDefault(key, defaultValue string) string {
